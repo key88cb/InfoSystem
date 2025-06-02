@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.zju.main.section.common.ApiResult;
 import com.zju.main.section.dto.ApplicationHistoryDetailResponse;
 import com.zju.main.section.dto.QueryApplicationResponse;
-import com.zju.main.section.dto.TeacherApplicationHistoryResponse;
 import com.zju.main.section.entity.Application;
 import com.zju.main.section.entity.Section;
 import com.zju.main.section.repository.ApplicationRepository;
@@ -38,9 +37,8 @@ public class ApplicationManager {
      * @param reason 申请原因
      * @param teacherId 教师ID
      * @return 添加结果
-     */
-    @Transactional
-    public ApiResult<?> add_application(Integer secId, String reason, Integer teacherId) {
+     */    @Transactional
+    public ApiResult<?> add_application(Integer secId, String reason, Integer teacherId, Integer adminId) {
         // 检查参数
         if (secId == null) {
             return ApiResult.error("课程章节ID不能为空");
@@ -52,6 +50,10 @@ public class ApplicationManager {
         
         if (teacherId == null) {
             return ApiResult.error("教师ID不能为空");
+        }
+        
+        if (adminId == null) {
+            return ApiResult.error("管理员ID不能为空");
         }
         
         // 检查课程章节是否存在
@@ -70,6 +72,7 @@ public class ApplicationManager {
         application.setSecId(secId);
         application.setReason(reason);
         application.setTeacherId(teacherId);
+        application.setAdminId(adminId);
         application.setFinalDecision(false);
         
         // 保存申请
@@ -85,9 +88,49 @@ public class ApplicationManager {
     // 可选：返回自定义分页结构
     return ApiResult.success("查询成功", new QueryApplicationResponse(applicationPage));
     }
+      /**
+     * 处理申请（通过申请ID）
+     * 
+     * @param appId 申请ID
+     * @param suggestion 处理建议
+     * @param finalDecision 最终决定
+     * @return 处理结果
+     */
+    @Transactional
+    public ApiResult<?> process_application_by_id(Integer appId, String suggestion, Boolean finalDecision) {
+        // 检查参数
+        if (appId == null) {
+            return ApiResult.error("申请ID不能为空");
+        }
+        
+        if (suggestion == null || suggestion.trim().isEmpty()) {
+            return ApiResult.error("处理建议不能为空");
+        }
+        
+        if (finalDecision == null) {
+            return ApiResult.error("最终决定不能为空");
+        }
+        
+        // 检查申请是否存在
+        Optional<Application> optionalApplication = applicationRepository.findById(appId);
+        if (!optionalApplication.isPresent()) {
+            return ApiResult.error("申请记录不存在");
+        }
+        
+        Application application = optionalApplication.get();
+        
+        // 更新申请
+        application.setSuggestion(suggestion);
+        application.setFinalDecision(finalDecision);
+        
+        // 保存更新后的申请
+        application = applicationRepository.save(application);
+        
+        return ApiResult.success("处理申请成功", application);
+    }
     
     /**
-     * 处理申请
+     * 处理申请（通过课程章节ID，保持向后兼容）
      * 
      * @param secId 课程章节ID
      * @param suggestion 处理建议
@@ -144,10 +187,11 @@ public class ApplicationManager {
             int to = Math.min(from + size, all.size());
             if (from >= all.size()) {
                 return ApiResult.success("查询教师申请历史成功", java.util.Collections.emptyList());
-            }
-            List<ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();
+            }            List<ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();
             for (java.util.Map<String, Object> row : all.subList(from, to)) {
                 ApplicationHistoryDetailResponse dto = new ApplicationHistoryDetailResponse();
+                dto.setAppId((Integer) row.get("app_id"));
+                dto.setAdminId((Integer) row.get("admin_id"));
                 dto.setSecId((Integer) row.get("sec_id"));
                 dto.setReason((String) row.get("reason"));
                 dto.setTeacherId((Integer) row.get("teacher_id"));
@@ -177,9 +221,10 @@ public class ApplicationManager {
         }
         try {
             List<java.util.Map<String, Object>> all = applicationRepository.findHistoryWithDetailByTeacherId(teacherId);
-            java.util.List<com.zju.main.section.dto.ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();
-            for (java.util.Map<String, Object> row : all) {
+            java.util.List<com.zju.main.section.dto.ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();            for (java.util.Map<String, Object> row : all) {
                 com.zju.main.section.dto.ApplicationHistoryDetailResponse dto = new com.zju.main.section.dto.ApplicationHistoryDetailResponse();
+                dto.setAppId((Integer) row.get("app_id"));
+                dto.setAdminId((Integer) row.get("admin_id"));
                 dto.setSecId((Integer) row.get("sec_id"));
                 dto.setReason((String) row.get("reason"));
                 dto.setTeacherId((Integer) row.get("teacher_id"));
@@ -191,10 +236,30 @@ public class ApplicationManager {
             }
             java.util.Map<String, Object> resp = new java.util.HashMap<>();
             resp.put("total", result.size());
-            resp.put("items", result);
-            return ApiResult.success("查询教师申请历史成功", resp);
+            resp.put("items", result);            return ApiResult.success("查询教师申请历史成功", resp);
         } catch (Exception e) {
             return ApiResult.error("查询教师申请历史失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据申请ID查询申请详情
+     * 
+     * @param appId 申请ID
+     * @return 查询结果
+     */
+    public ApiResult<?> getApplicationById(Integer appId) {
+        if (appId == null) {
+            return ApiResult.error("申请ID不能为空");
+        }
+        try {
+            Optional<Application> optionalApplication = applicationRepository.findById(appId);
+            if (!optionalApplication.isPresent()) {
+                return ApiResult.error("申请记录不存在");
+            }
+            return ApiResult.success("查询申请详情成功", optionalApplication.get());
+        } catch (Exception e) {
+            return ApiResult.error("查询申请详情失败: " + e.getMessage());
         }
     }
 }

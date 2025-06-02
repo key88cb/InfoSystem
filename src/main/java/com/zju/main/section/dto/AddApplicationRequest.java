@@ -10,4 +10,5 @@ public class AddApplicationRequest {
     private Integer secId;
     private String reason;
     private Integer teacherId;
+    private Integer adminId;
 }
