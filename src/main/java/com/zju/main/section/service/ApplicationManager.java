@@ -57,15 +57,15 @@ public class ApplicationManager {
         if (!optionalSection.isPresent()) {
             return ApiResult.error("课程章节不存在");
         }
-        
-        // 创建新申请
+          // 创建新申请
         Application application = new Application();
         application.setSecId(secId);
         application.setReason(reason);
         application.setTeacherId(teacherId);
         // adminId 在申请创建时为空，等管理员审核时再设置
         application.setAdminId(null);
-        application.setFinalDecision(false);
+        // finalDecision 在申请创建时为空，等管理员处理时再设置
+        application.setFinalDecision(null);
         
         // 保存申请
         application = applicationRepository.save(application);
