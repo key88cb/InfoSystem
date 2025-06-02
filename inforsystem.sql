@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 02/06/2025 20:08:50
+ Date: 02/06/2025 20:27:53
 */
 
 SET NAMES utf8mb4;
@@ -232,6 +232,68 @@ CREATE TABLE `grade_change`  (
 INSERT INTO `grade_change` VALUES (1, 2, NULL, 92, '2024-12-20 10:00:00', NULL, 'Final Grade Correction', 1);
 INSERT INTO `grade_change` VALUES (3, 2, 1, 80, '2025-01-10 09:00:00', '2025-01-11 14:00:00', 'Test Regrade', 2);
 INSERT INTO `grade_change` VALUES (5, 4, 0, 90, '2024-12-15 11:30:00', '2024-12-16 10:00:00', 'Homework Appeal', 3);
+
+-- ----------------------------
+-- Table structure for homework_correction
+-- ----------------------------
+DROP TABLE IF EXISTS `homework_correction`;
+CREATE TABLE `homework_correction`  (
+  `student_id` int NOT NULL,
+  `homework_id` int NOT NULL,
+  `score` int NOT NULL,
+  `feedback` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`student_id`, `homework_id`) USING BTREE,
+  INDEX `homework_correction_ibfk_1`(`homework_id` ASC) USING BTREE,
+  CONSTRAINT `homework_correction_ibfk_1` FOREIGN KEY (`homework_id`) REFERENCES `homework_information` (`homework_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `homework_correction_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `student` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `record_check_score` CHECK ((`score` >= 0) and (`score` <= 100))
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of homework_correction
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for homework_information
+-- ----------------------------
+DROP TABLE IF EXISTS `homework_information`;
+CREATE TABLE `homework_information`  (
+  `homework_id` int NOT NULL AUTO_INCREMENT,
+  `sec_id` int NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `deadline` datetime NOT NULL,
+  `proportion` double NOT NULL,
+  `committed` tinyint(1) NOT NULL DEFAULT 0,
+  `files` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`homework_id`) USING BTREE,
+  INDEX `homework_information_ibfk_1`(`sec_id` ASC) USING BTREE,
+  CONSTRAINT `homework_information_ibfk_1` FOREIGN KEY (`sec_id`) REFERENCES `section` (`sec_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `check_proportion` CHECK ((`proportion` >= 0) and (`proportion` <= 1))
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of homework_information
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for homework_record
+-- ----------------------------
+DROP TABLE IF EXISTS `homework_record`;
+CREATE TABLE `homework_record`  (
+  `student_id` int NOT NULL,
+  `homework_id` int NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `files` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`student_id`, `homework_id`) USING BTREE,
+  INDEX `homework_record_ibfk_1`(`homework_id` ASC) USING BTREE,
+  CONSTRAINT `homework_record_ibfk_1` FOREIGN KEY (`homework_id`) REFERENCES `homework_information` (`homework_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `homework_record_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `student` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of homework_record
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for personal_information
