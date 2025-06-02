@@ -16,7 +16,7 @@ public class Application {
     @Column(name = "app_id")
     private Integer appId;
     
-    @Column(name = "admin_id", nullable = false)
+    @Column(name = "admin_id")
     private Integer adminId;
     
     @Column(name = "sec_id", nullable = false)

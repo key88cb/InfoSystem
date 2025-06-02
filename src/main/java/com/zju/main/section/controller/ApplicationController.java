@@ -17,16 +17,15 @@ public class ApplicationController {
     
     @Autowired
     private ApplicationManager applicationManager;    
-    
-    /**
+      /**
      * 添加申请
-     */    @PostMapping("/add")
+     */    
+    @PostMapping("/add")
     public ApiResult<?> addApplication(@RequestBody AddApplicationRequest request) {
         return applicationManager.add_application(
             request.getSecId(), 
             request.getReason(), 
-            request.getTeacherId(),
-            request.getAdminId()
+            request.getTeacherId()
         );
     }
 

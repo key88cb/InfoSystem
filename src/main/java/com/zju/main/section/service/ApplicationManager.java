@@ -29,16 +29,16 @@ public class ApplicationManager {
     private ApplicationRepository applicationRepository;
     
     @Autowired
-    private SectionRepository sectionRepository;
-      /**
+    private SectionRepository sectionRepository;    /**
      * 添加申请
      * 
      * @param secId 课程章节ID
      * @param reason 申请原因
      * @param teacherId 教师ID
      * @return 添加结果
-     */    @Transactional
-    public ApiResult<?> add_application(Integer secId, String reason, Integer teacherId, Integer adminId) {
+     */    
+    @Transactional
+    public ApiResult<?> add_application(Integer secId, String reason, Integer teacherId) {
         // 检查参数
         if (secId == null) {
             return ApiResult.error("课程章节ID不能为空");
@@ -52,10 +52,7 @@ public class ApplicationManager {
             return ApiResult.error("教师ID不能为空");
         }
         
-        if (adminId == null) {
-            return ApiResult.error("管理员ID不能为空");
-        }
-          // 检查课程章节是否存在
+        // 检查课程章节是否存在
         Optional<Section> optionalSection = sectionRepository.findById(secId);
         if (!optionalSection.isPresent()) {
             return ApiResult.error("课程章节不存在");
@@ -66,7 +63,8 @@ public class ApplicationManager {
         application.setSecId(secId);
         application.setReason(reason);
         application.setTeacherId(teacherId);
-        application.setAdminId(adminId);
+        // adminId 在申请创建时为空，等管理员审核时再设置
+        application.setAdminId(null);
         application.setFinalDecision(false);
         
         // 保存申请
@@ -114,12 +112,15 @@ public class ApplicationManager {
         if (!optionalApplication.isPresent()) {
             return ApiResult.error("申请记录不存在");
         }
+          Application application = optionalApplication.get();
         
-        Application application = optionalApplication.get();
-        
-        // 验证管理员权限（确保管理员ID与申请中的管理员ID一致）
-        if (!application.getAdminId().equals(adminId)) {
-            return ApiResult.error("无权限处理此申请，管理员ID不匹配");
+        // 验证管理员权限
+        if (application.getAdminId() == null) {
+            // 申请还未被任何管理员处理，设置当前管理员ID
+            application.setAdminId(adminId);
+        } else if (!application.getAdminId().equals(adminId)) {
+            // 申请已被其他管理员处理
+            return ApiResult.error("此申请已被其他管理员处理，无权限修改");
         }
         
         // 更新申请
