@@ -11,7 +11,7 @@
  Target Server Version : 80400 (8.4.0)
  File Encoding         : 65001
 
- Date: 02/06/2025 20:27:53
+ Date: 02/06/2025 20:41:26
 */
 
 SET NAMES utf8mb4;
@@ -38,7 +38,7 @@ INSERT INTO `administrator` VALUES (1);
 DROP TABLE IF EXISTS `application`;
 CREATE TABLE `application`  (
   `app_id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `admin_id` int NOT NULL,
+  `admin_id` int NULL DEFAULT NULL,
   `sec_id` int NOT NULL,
   `reason` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `teacher_id` int NOT NULL,
