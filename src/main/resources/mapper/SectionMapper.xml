@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zju.main.sharingSystem.mapper.SectionMapper">
+
+    <resultMap id="SectionVOMap" type="com.zju.main.sharingSystem.vo.SectionVO" autoMapping="true">
+        <result column="time_slot_ids" property="timeSlotIds"
+                typeHandler="com.zju.main.sharingSystem.util.typehandler.IntegerListTypeHandler"/>
+    </resultMap>
+
+    <select id="selectSectionsByStudent" resultMap="SectionVOMap">
+        SELECT T.sec_id AS section_id, C.title, C.dept_name AS department_name, S.semester, S.year, P.name AS teacher_name,S.time_slot_ids
+        FROM (
+            SELECT sec_id
+            FROM takes
+            WHERE student_id = #{studentId}
+        ) T
+        LEFT JOIN section S ON S.sec_id = T.sec_id
+        LEFT JOIN course C ON C.course_id = S.course_id
+        LEFT JOIN user U ON U.user_id = S.teacher_id
+        LEFT JOIN personal_information P ON P.personal_infor_ID = U.personal_infor_id
+    </select>
+
+    <select id="selectSectionsByTeacher" resultMap="SectionVOMap">
+        SELECT S.sec_id AS section_id, C.title, C.dept_name AS department_name, S.semester, S.year, P.name AS teacher_name,S.time_slot_ids
+        FROM (
+            SELECT *
+            FROM section
+            WHERE teacher_id = #{teacherId}
+        ) S
+        LEFT JOIN course C ON C.course_id = S.course_id
+        LEFT JOIN user U ON U.user_id = S.teacher_id
+        LEFT JOIN personal_information P ON P.personal_infor_ID = U.personal_infor_id
+    </select>
+
+    <select id="selectSectionById" resultMap="SectionVOMap">
+        SELECT S.sec_id AS section_id, C.title, C.dept_name AS department_name, S.semester, S.year, P.name AS teacher_name,S.time_slot_ids
+        FROM (
+            SELECT *
+            FROM section
+            WHERE sec_id = #{sectionId}
+        ) S
+        LEFT JOIN course C ON C.course_id = S.course_id
+        LEFT JOIN user U ON U.user_id = S.teacher_id
+        LEFT JOIN personal_information P ON P.personal_infor_ID = U.personal_infor_id
+    </select>
+
+</mapper>

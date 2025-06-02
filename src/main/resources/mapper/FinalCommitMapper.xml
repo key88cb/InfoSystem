@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zju.main.sharingSystem.mapper.FinalCommitMapper">
+
+    <insert id="insertHomeworkGrade">
+        INSERT INTO grade (takes_id, grade, proportion, type) VALUES
+        <foreach collection="grades" separator="," item="grade">
+            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'homework')
+        </foreach>
+    </insert>
+
+    <insert id="insertAttendanceGrade">
+        INSERT INTO grade (takes_id, grade, proportion, type) VALUES
+        <foreach collection="grades" separator="," item="grade">
+            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'attending')
+        </foreach>
+    </insert>
+
+</mapper>
