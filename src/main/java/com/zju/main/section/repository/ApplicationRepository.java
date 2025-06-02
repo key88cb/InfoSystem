@@ -8,24 +8,15 @@ import org.springframework.stereotype.Repository;
 import com.zju.main.section.entity.Application;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
-    
-    /**
-     * 根据申请ID查询申请
-     * @param appId 申请ID
-     * @return 申请
-     */
-    Optional<Application> findByAppId(Integer appId);
-    
-    /**
-     * 根据课程章节ID查询申请
+      /**
+     * 根据课程章节ID查询所有申请（按申请ID倒序）
      * @param secId 课程章节ID
-     * @return 申请
+     * @return 申请列表
      */
-    Application findBySecId(Integer secId);
+    List<Application> findBySecIdOrderByAppIdDesc(Integer secId);
       /**
      * 根据教师ID查询历史申请（分页）
      * @param teacherId 教师ID
@@ -33,13 +24,27 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
      * @return 申请列表
      */
     Page<Application> findByTeacherIdOrderByAppIdDesc(Integer teacherId, Pageable pageable);
-    
-    /**
+      /**
      * 根据教师ID查询历史申请列表
      * @param teacherId 教师ID
      * @return 申请列表
      */
     List<Application> findByTeacherIdOrderByAppIdDesc(Integer teacherId);
+    
+    /**
+     * 根据管理员ID查询申请列表
+     * @param adminId 管理员ID
+     * @return 申请列表
+     */
+    List<Application> findByAdminIdOrderByAppIdDesc(Integer adminId);
+    
+    /**
+     * 根据管理员ID查询申请列表（分页）
+     * @param adminId 管理员ID
+     * @param pageable 分页参数
+     * @return 申请列表
+     */
+    Page<Application> findByAdminIdOrderByAppIdDesc(Integer adminId, Pageable pageable);
       /**
      * 联表查询教师的历史申请，包含课程名和上课地点
      */

@@ -55,19 +55,13 @@ public class ApplicationManager {
         if (adminId == null) {
             return ApiResult.error("管理员ID不能为空");
         }
-        
-        // 检查课程章节是否存在
+          // 检查课程章节是否存在
         Optional<Section> optionalSection = sectionRepository.findById(secId);
         if (!optionalSection.isPresent()) {
             return ApiResult.error("课程章节不存在");
         }
         
-        // 检查申请是否已存在
-        Application existingApplication = applicationRepository.findBySecId(secId);
-        if (existingApplication != null) {
-            return ApiResult.error("该课程章节已有申请记录");
-        }
-          // 创建新申请
+        // 创建新申请
         Application application = new Application();
         application.setSecId(secId);
         application.setReason(reason);
@@ -87,20 +81,24 @@ public class ApplicationManager {
 
     // 可选：返回自定义分页结构
     return ApiResult.success("查询成功", new QueryApplicationResponse(applicationPage));
-    }
-      /**
-     * 处理申请（通过申请ID）
+    }    /**
+     * 处理申请
      * 
      * @param appId 申请ID
+     * @param adminId 管理员ID
      * @param suggestion 处理建议
      * @param finalDecision 最终决定
      * @return 处理结果
      */
     @Transactional
-    public ApiResult<?> process_application_by_id(Integer appId, String suggestion, Boolean finalDecision) {
+    public ApiResult<?> process_application(Integer appId, Integer adminId, String suggestion, Boolean finalDecision) {
         // 检查参数
         if (appId == null) {
             return ApiResult.error("申请ID不能为空");
+        }
+        
+        if (adminId == null) {
+            return ApiResult.error("管理员ID不能为空");
         }
         
         if (suggestion == null || suggestion.trim().isEmpty()) {
@@ -119,43 +117,9 @@ public class ApplicationManager {
         
         Application application = optionalApplication.get();
         
-        // 更新申请
-        application.setSuggestion(suggestion);
-        application.setFinalDecision(finalDecision);
-        
-        // 保存更新后的申请
-        application = applicationRepository.save(application);
-        
-        return ApiResult.success("处理申请成功", application);
-    }
-    
-    /**
-     * 处理申请（通过课程章节ID，保持向后兼容）
-     * 
-     * @param secId 课程章节ID
-     * @param suggestion 处理建议
-     * @param finalDecision 最终决定
-     * @return 处理结果
-     */
-    @Transactional
-    public ApiResult<?> process_application(Integer secId, String suggestion, Boolean finalDecision) {
-        // 检查参数
-        if (secId == null) {
-            return ApiResult.error("课程章节ID不能为空");
-        }
-        
-        if (suggestion == null || suggestion.trim().isEmpty()) {
-            return ApiResult.error("处理建议不能为空");
-        }
-        
-        if (finalDecision == null) {
-            return ApiResult.error("最终决定不能为空");
-        }
-        
-        // 检查申请是否存在
-        Application application = applicationRepository.findBySecId(secId);
-        if (application == null) {
-            return ApiResult.error("申请记录不存在");
+        // 验证管理员权限（确保管理员ID与申请中的管理员ID一致）
+        if (!application.getAdminId().equals(adminId)) {
+            return ApiResult.error("无权限处理此申请，管理员ID不匹配");
         }
         
         // 更新申请
@@ -258,8 +222,38 @@ public class ApplicationManager {
                 return ApiResult.error("申请记录不存在");
             }
             return ApiResult.success("查询申请详情成功", optionalApplication.get());
+        } catch (Exception e) {            return ApiResult.error("查询申请详情失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据管理员ID查询申请列表（分页）
+     * 
+     * @param adminId 管理员ID
+     * @param page 页码（从1开始）
+     * @param size 每页大小
+     * @return 查询结果
+     */
+    public ApiResult<?> queryApplicationsByAdmin(Integer adminId, int page, int size) {
+        if (adminId == null) {
+            return ApiResult.error("管理员ID不能为空");
+        }
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
+        
+        try {
+            Pageable pageable = PageRequest.of(page - 1, size);
+            Page<Application> applicationPage = applicationRepository.findByAdminIdOrderByAppIdDesc(adminId, pageable);
+            
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("total", applicationPage.getTotalElements());
+            result.put("totalPages", applicationPage.getTotalPages());
+            result.put("currentPage", page);
+            result.put("items", applicationPage.getContent());
+            
+            return ApiResult.success("查询管理员申请列表成功", result);
         } catch (Exception e) {
-            return ApiResult.error("查询申请详情失败: " + e.getMessage());
+            return ApiResult.error("查询管理员申请列表失败: " + e.getMessage());
         }
     }
 }
