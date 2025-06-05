@@ -32,6 +32,7 @@ import static com.zju.main.sharingSystem.constant.FilePathConstant.BASE_PATH;
 
 @RestController
 @Slf4j
+@RequestMapping("/sharing-system")
 public class UserController {
 
     @Autowired
