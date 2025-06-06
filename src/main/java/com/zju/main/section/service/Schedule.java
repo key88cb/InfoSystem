@@ -255,12 +255,12 @@ public class Schedule {
             return List.of();
         }
 
-        // 3. 准备结果，先放入 start
+//        // 3. 准备结果，先放入 start
         List<TimeSlot> result = new ArrayList<>(neededHrs);
-        result.add(start);
-
-        // 4. 依次往后取 neededHrs-1 段，校验间隔
-        for (int k = 1; k < neededHrs; k++) {
+//        result.add(start);
+        int hs=0;
+        // 4. 依次往后取 neededHrs段
+        for (int k = 0; hs < neededHrs ; k++) {
             int nextIdx = idx + k;
             if (nextIdx >= daySlots.size()) {
                 // 已经超出当天可用段数
@@ -268,7 +268,12 @@ public class Schedule {
             }
 //            TimeSlot prev = result.get(k - 1);
             TimeSlot next = daySlots.get(nextIdx);
-//
+            if(hs==0){
+              if(next.getTimeSlotId()%12==1 ||next.getTimeSlotId()%12==3||next.getTimeSlotId()%12==5||next.getTimeSlotId()==8||next.getTimeSlotId()==10){
+                  result.add(next);hs++;
+              }}else{
+                result.add(next);hs++;
+            }
 //            // 计算 prev.endTime 到 next.startTime 的分钟差
 //            long gapMinutes = Duration.between(prev.getEndTime(), next.getStartTime()).toMinutes();
 //            if (gapMinutes != 10) {
@@ -276,7 +281,7 @@ public class Schedule {
 //                return List.of();
 //            }
 
-            result.add(next);
+
         }
 
         return result;
