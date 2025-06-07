@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper
 public interface FinalCommitMapper {
 
-    void insertHomeworkGrade(List<HomeworkFinalGrade> grades);
+    void insertHomeworkGrade(List<HomeworkFinalGrade> grades, String title);
 
     void insertAttendanceGrade(List<AttendanceFinalGrade> grades);
 
