@@ -23,13 +23,11 @@ public class ClassroomManager {
     private ClassroomRepository classroomRepository;
 
     @Autowired
-    private SectionRepository sectionRepository;
-
-    /**
+    private SectionRepository sectionRepository;    /**
      * 添加教室
      */
     @Transactional
-    public ApiResult<?> add_classroom(String campus, Integer capacity, String building, Integer roomNumber) {
+    public ApiResult<?> add_classroom(String campus, Integer capacity, String building, Integer roomNumber, String type) {
         if (campus == null || campus.trim().isEmpty()) {
             return ApiResult.error("校区不能为空");
         }
@@ -52,17 +50,16 @@ public class ClassroomManager {
         classroom.setCapacity(capacity);
         classroom.setBuilding(building);
         classroom.setRoomNumber(roomNumber);
+        classroom.setType(type);
 
         classroom = classroomRepository.save(classroom);
 
         return ApiResult.success("添加教室成功", classroom);
-    }
-
-    /**
+    }    /**
      * 修改教室信息
      */
     @Transactional
-    public ApiResult<?> modify_classroom(Integer classroomId, String newCampus, Integer newCapacity, String newBuilding) {
+    public ApiResult<?> modify_classroom(Integer classroomId, String newCampus, Integer newCapacity, String newBuilding, String newType) {
         Optional<Classroom> optionalClassroom = classroomRepository.findById(classroomId);
         if (!optionalClassroom.isPresent()) {
             return ApiResult.error("教室不存在");
@@ -83,6 +80,11 @@ public class ClassroomManager {
 
         if (newBuilding != null) {
             classroom.setBuilding(newBuilding);
+            changed = true;
+        }
+
+        if (newType != null) {
+            classroom.setType(newType);
             changed = true;
         }
 
