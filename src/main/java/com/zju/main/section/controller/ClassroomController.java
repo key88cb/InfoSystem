@@ -16,8 +16,7 @@ import com.zju.main.section.service.ClassroomManager;
 public class ClassroomController {
     
     @Autowired
-    private ClassroomManager classroomManager;
-      /**
+    private ClassroomManager classroomManager;      /**
      * 添加教室
      */
     @PostMapping("/add")
@@ -26,10 +25,10 @@ public class ClassroomController {
             request.getCampus(),
             request.getCapacity(),
             request.getBuilding(),
-            request.getRoomNumber()
+            request.getRoomNumber(),
+            request.getType()
         );
-    }
-      /**
+    }      /**
      * 修改教室
      */
     @PutMapping("/modify")
@@ -38,7 +37,8 @@ public class ClassroomController {
             request.getClassroomId(), 
             request.getNewCampus(), 
             request.getNewCapacity(), 
-            request.getNewBuilding()
+            request.getNewBuilding(),
+            request.getNewType()
         );
     }
     

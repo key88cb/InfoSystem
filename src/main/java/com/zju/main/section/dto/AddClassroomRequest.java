@@ -11,4 +11,5 @@ public class AddClassroomRequest {
     private Integer capacity;
     private String building;
     private Integer roomNumber;
+    private String type;
 }

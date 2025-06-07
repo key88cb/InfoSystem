@@ -10,15 +10,15 @@ import com.zju.main.section.entity.Classroom;
 import java.util.List;
 
 @Repository
-public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {    
-    /**
+public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {      /**
      * 根据关键字查询教室
      * @param keyword 关键字
      * @return 教室列表
      */    
     @Query("SELECT c FROM Classroom c WHERE " +
            "c.campus LIKE CONCAT('%', :keyword, '%') OR " +
-           "c.building LIKE CONCAT('%', :keyword, '%')")
+           "c.building LIKE CONCAT('%', :keyword, '%') OR " +
+           "c.type LIKE CONCAT('%', :keyword, '%')")
     List<Classroom> findByKeyword(@Param("keyword") String keyword);
     
     /**
@@ -27,14 +27,20 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
      * @return 教室列表
      */
     List<Classroom> findByClassroomId(Integer id);
-    
-    /**
+      /**
      * 根据校区和房间号查询教室
      * @param campus 校区
      * @param roomNumber 房间号
      * @return 教室
      */
     Classroom findByCampusAndRoomNumber(String campus, Integer roomNumber);
+    
+    /**
+     * 根据教室类型查询教室
+     * @param type 教室类型
+     * @return 教室列表
+     */
+    List<Classroom> findByType(String type);
         /**
          * 查出指定院系（deptName）所在校区的所有教室
          */

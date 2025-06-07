@@ -11,4 +11,5 @@ public class ModifyClassroomRequest {
     private String newCampus;
     private Integer newCapacity;
     private String newBuilding;
+    private String newType;
 }
