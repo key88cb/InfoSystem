@@ -48,11 +48,17 @@ public class UserController {
     }
     // TODO: 更新查询语句
     @GetMapping("/section")
-    public ApiResult getSection(int sectionId) {
-        // 获取课程详细信息
-        SectionVO sectionVO = sectionService.getSection(sectionId);
-
-        return ApiResult.success(sectionVO);
+    public ApiResult getSection(int sectionId, int userId, boolean isStudent) {
+        // 获取课程列表
+        List<SectionVO> sectionList = sectionService.getSectionList(userId, isStudent);
+        for (SectionVO section : sectionList) {
+            if (section.getSectionId() == sectionId) {
+                // 获取课程详细信息
+                SectionVO sectionVO = sectionService.getSection(sectionId);
+                return ApiResult.success(sectionVO);
+            }
+        }
+        return ApiResult.error("case1");
     }
 
     @GetMapping("/api/file")
