@@ -370,49 +370,94 @@ public class Schedule {
         sectionRepository.save(section);
         
         return ApiResult.success("手动排课成功");
-    }
-    @Transactional(readOnly = true)
-public ApiResult<?> admin_query(String courseTitle, String semester, Integer year, int page, int pageSize) {
-    List<Section> allSections = sectionRepository.findAll();
+    }    @Transactional(readOnly = true)
+public ApiResult<?> admin_query(String courseTitle, String teacherName, String semester, Integer year, int page, int pageSize) {
+    try {
+        // 使用详细查询获取所有section信息
+        List<Map<String, Object>> allSectionDetails = sectionRepository.findAllWithDetails();
 
-    // 筛选逻辑
-    List<Section> filtered = allSections.stream().filter(sec -> {
-        boolean match = true;
-        if (semester != null && !semester.isEmpty())
-            match &= sec.getSemester().equalsIgnoreCase(semester);
-        if (year != null)
-            match &= sec.getYear().getValue() == year;
-        if (courseTitle != null && !courseTitle.isEmpty()) {
-            Course course = courseRepository.findById(sec.getCourseId()).orElse(null);
-            match &= (course != null && course.getTitle().contains(courseTitle));
+        // 筛选逻辑
+        List<Map<String, Object>> filtered = allSectionDetails.stream().filter(section -> {
+            boolean match = true;
+            if (semester != null && !semester.isEmpty()) {
+                match &= semester.equalsIgnoreCase((String) section.get("semester"));
+            }
+            if (year != null) {
+                match &= year.equals(section.get("year"));
+            }
+            if (courseTitle != null && !courseTitle.isEmpty()) {
+                String title = (String) section.get("courseTitle");
+                match &= (title != null && title.contains(courseTitle));
+            }
+            if (teacherName != null && !teacherName.isEmpty()) {
+                String teacher = (String) section.get("teacherName");
+                match &= (teacher != null && teacher.contains(teacherName));
+            }
+            return match;
+        }).collect(java.util.stream.Collectors.toList());
+
+        // 分页处理
+        int total = filtered.size();
+        int from = Math.min((page - 1) * pageSize, total);
+        int to = Math.min(from + pageSize, total);
+
+        if (from >= total) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("total", total);
+            result.put("records", new ArrayList<>());
+            return ApiResult.success(result);
         }
-        return match;
-    }).toList();
 
-    // 分页处理
-    int total = filtered.size();
-    int from = Math.min((page - 1) * pageSize, total);
-    int to = Math.min(from + pageSize, total);
+        List<com.zju.main.section.dto.ScheduleDetailResponse> records = new ArrayList<>();
+        for (Map<String, Object> row : filtered.subList(from, to)) {
+            com.zju.main.section.dto.ScheduleDetailResponse dto = new com.zju.main.section.dto.ScheduleDetailResponse();
+            dto.setSecId((Integer) row.get("secId"));
+            dto.setCourseId((Integer) row.get("courseId"));
+            dto.setSemester((String) row.get("semester"));
+            dto.setYear((Integer) row.get("year"));
+            dto.setClassroomId((Integer) row.get("classroomId"));
+            dto.setTeacherId((Integer) row.get("teacherId"));
+            dto.setCourseTitle((String) row.get("courseTitle"));
+            dto.setTeacherName((String) row.get("teacherName"));
+            dto.setClassroomLocation((String) row.get("classroomLocation"));
+            dto.setClassroomBuilding((String) row.get("classroomBuilding"));
+            dto.setClassroomCampus((String) row.get("classroomCampus"));
+            dto.setRoomNumber((Integer) row.get("roomNumber"));
+            
+            // 处理timeSlotIds - 需要从JSON字符串转换为List
+            Object timeSlotIdsObj = row.get("timeSlotIds");
+            if (timeSlotIdsObj != null) {
+                if (timeSlotIdsObj instanceof String) {
+                    String timeSlotIdsStr = (String) timeSlotIdsObj;
+                    if (!timeSlotIdsStr.isEmpty() && !timeSlotIdsStr.equals("null")) {
+                        try {
+                            // 简单的JSON数组解析
+                            timeSlotIdsStr = timeSlotIdsStr.replaceAll("[\\[\\]\\s]", "");
+                            if (!timeSlotIdsStr.isEmpty()) {
+                                List<Integer> timeSlotIds = java.util.Arrays.stream(timeSlotIdsStr.split(","))
+                                    .map(String::trim)
+                                    .map(Integer::parseInt)
+                                    .collect(java.util.stream.Collectors.toList());
+                                dto.setTimeSlotIds(timeSlotIds);
+                            }
+                        } catch (Exception e) {
+                            dto.setTimeSlotIds(new ArrayList<>());
+                        }
+                    }
+                } else if (timeSlotIdsObj instanceof List) {
+                    dto.setTimeSlotIds((List<Integer>) timeSlotIdsObj);
+                }
+            }
+            
+            records.add(dto);
+        }
 
-    List<Map<String, Object>> records = new ArrayList<>();
-    for (Section sec : filtered.subList(from, to)) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("secId", sec.getSecId());
-        map.put("courseId", sec.getCourseId());
-        map.put("teacherId", sec.getTeacherId());
-        map.put("classroomId", sec.getClassroomId());
-        map.put("semester", sec.getSemester());
-        map.put("year", sec.getYear().getValue());
-        map.put("timeSlotIds", sec.getTimeSlotIds());
-
-        courseRepository.findById(sec.getCourseId()).ifPresent(c -> map.put("courseTitle", c.getTitle()));
-
-        records.add(map);
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", total);
+        result.put("records", records);
+        return ApiResult.success(result);
+    } catch (Exception e) {
+        return ApiResult.error("查询排课信息失败: " + e.getMessage());
     }
-
-    Map<String, Object> result = new HashMap<>();
-    result.put("total", total);
-    result.put("records", records);
-    return ApiResult.success(result);
 }
 }

@@ -45,6 +45,6 @@ public class ScheduleController {
         @RequestParam(defaultValue = "1") Integer page,
         @RequestParam(defaultValue = "10") Integer pageSize
         ) {
-            return scheduleService.admin_query(courseTitle, semester, year, page, pageSize);
+            return scheduleService.admin_query(courseTitle, teacherName, semester, year, page, pageSize);
         }
 }
