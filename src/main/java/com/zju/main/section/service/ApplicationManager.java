@@ -71,15 +71,50 @@ public class ApplicationManager {
         application = applicationRepository.save(application);
         
         return ApiResult.success("添加申请成功", application);
-    }
-
-    public ApiResult<?> query_application(int page, int size) {
-    Pageable pageable = PageRequest.of(page - 1, size);
-    Page<Application> applicationPage = applicationRepository.findAll(pageable);
-
-    // 可选：返回自定义分页结构
-    return ApiResult.success("查询成功", new QueryApplicationResponse(applicationPage));
-    }    /**
+    }    public ApiResult<?> query_application(int page, int size) {
+        try {
+            // 使用新的详细查询方法
+            List<java.util.Map<String, Object>> allApplications = applicationRepository.findAllWithDetails();
+            
+            // 手动分页
+            int total = allApplications.size();
+            int from = (page - 1) * size;
+            int to = Math.min(from + size, total);
+            
+            if (from >= total) {
+                java.util.Map<String, Object> resp = new java.util.HashMap<>();
+                resp.put("total", total);
+                resp.put("items", java.util.Collections.emptyList());
+                return ApiResult.success("查询成功", resp);
+            }
+            
+            List<ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();
+            for (java.util.Map<String, Object> row : allApplications.subList(from, to)) {
+                ApplicationHistoryDetailResponse dto = new ApplicationHistoryDetailResponse();
+                dto.setAppId((Integer) row.get("app_id"));
+                dto.setAdminId((Integer) row.get("admin_id"));
+                dto.setSecId((Integer) row.get("sec_id"));
+                dto.setReason((String) row.get("reason"));
+                dto.setTeacherId((Integer) row.get("teacher_id"));
+                dto.setSuggestion((String) row.get("suggestion"));
+                dto.setFinalDecision(row.get("final") != null ? ((Boolean) row.get("final")) : null);
+                dto.setCourseTitle((String) row.get("courseTitle"));
+                dto.setSemester((String) row.get("semester"));
+                dto.setYear((Integer) row.get("year"));
+                dto.setTeacherName((String) row.get("teacherName"));
+                dto.setClassroomLocation((String) row.get("classroomLocation"));
+                result.add(dto);
+            }
+            
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("total", total);
+            resp.put("items", result);
+            
+            return ApiResult.success("查询成功", resp);
+        } catch (Exception e) {
+            return ApiResult.error("查询失败: " + e.getMessage());
+        }
+    }/**
      * 处理申请
      * 
      * @param appId 申请ID
@@ -152,8 +187,7 @@ public class ApplicationManager {
             int to = Math.min(from + size, all.size());
             if (from >= all.size()) {
                 return ApiResult.success("查询教师申请历史成功", java.util.Collections.emptyList());
-            }            List<ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();
-            for (java.util.Map<String, Object> row : all.subList(from, to)) {
+            }            List<ApplicationHistoryDetailResponse> result = new java.util.ArrayList<>();            for (java.util.Map<String, Object> row : all.subList(from, to)) {
                 ApplicationHistoryDetailResponse dto = new ApplicationHistoryDetailResponse();
                 dto.setAppId((Integer) row.get("app_id"));
                 dto.setAdminId((Integer) row.get("admin_id"));
@@ -163,6 +197,9 @@ public class ApplicationManager {
                 dto.setSuggestion((String) row.get("suggestion"));
                 dto.setFinalDecision(row.get("final") != null ? ((Boolean) row.get("final")) : null);
                 dto.setCourseTitle((String) row.get("courseTitle"));
+                dto.setSemester((String) row.get("semester"));
+                dto.setYear((Integer) row.get("year"));
+                dto.setTeacherName((String) row.get("teacherName"));
                 dto.setClassroomLocation((String) row.get("classroomLocation"));
                 result.add(dto);
             }
@@ -196,6 +233,9 @@ public class ApplicationManager {
                 dto.setSuggestion((String) row.get("suggestion"));
                 dto.setFinalDecision(row.get("final") != null ? ((Boolean) row.get("final")) : null);
                 dto.setCourseTitle((String) row.get("courseTitle"));
+                dto.setSemester((String) row.get("semester"));
+                dto.setYear((Integer) row.get("year"));
+                dto.setTeacherName((String) row.get("teacherName"));
                 dto.setClassroomLocation((String) row.get("classroomLocation"));
                 result.add(dto);
             }
@@ -206,8 +246,7 @@ public class ApplicationManager {
             return ApiResult.error("查询教师申请历史失败: " + e.getMessage());
         }
     }
-    
-    /**
+      /**
      * 根据申请ID查询申请详情
      * 
      * @param appId 申请ID
@@ -218,16 +257,31 @@ public class ApplicationManager {
             return ApiResult.error("申请ID不能为空");
         }
         try {
-            Optional<Application> optionalApplication = applicationRepository.findById(appId);
-            if (!optionalApplication.isPresent()) {
+            java.util.Map<String, Object> row = applicationRepository.findDetailsByAppId(appId);
+            if (row == null) {
                 return ApiResult.error("申请记录不存在");
             }
-            return ApiResult.success("查询申请详情成功", optionalApplication.get());
-        } catch (Exception e) {            return ApiResult.error("查询申请详情失败: " + e.getMessage());
+            
+            ApplicationHistoryDetailResponse dto = new ApplicationHistoryDetailResponse();
+            dto.setAppId((Integer) row.get("app_id"));
+            dto.setAdminId((Integer) row.get("admin_id"));
+            dto.setSecId((Integer) row.get("sec_id"));
+            dto.setReason((String) row.get("reason"));
+            dto.setTeacherId((Integer) row.get("teacher_id"));
+            dto.setSuggestion((String) row.get("suggestion"));
+            dto.setFinalDecision(row.get("final") != null ? ((Boolean) row.get("final")) : null);
+            dto.setCourseTitle((String) row.get("courseTitle"));
+            dto.setSemester((String) row.get("semester"));
+            dto.setYear((Integer) row.get("year"));
+            dto.setTeacherName((String) row.get("teacherName"));
+            dto.setClassroomLocation((String) row.get("classroomLocation"));
+            
+            return ApiResult.success("查询申请详情成功", dto);
+        } catch (Exception e) {            
+            return ApiResult.error("查询申请详情失败: " + e.getMessage());
         }
     }
-    
-    /**
+      /**
      * 根据管理员ID查询申请列表（分页）
      * 
      * @param adminId 管理员ID
@@ -243,14 +297,45 @@ public class ApplicationManager {
         if (size < 1) size = 10;
         
         try {
-            Pageable pageable = PageRequest.of(page - 1, size);
-            Page<Application> applicationPage = applicationRepository.findByAdminIdOrderByAppIdDesc(adminId, pageable);
+            List<java.util.Map<String, Object>> all = applicationRepository.findDetailsByAdminId(adminId);
+            
+            // 手动分页
+            int total = all.size();
+            int from = (page - 1) * size;
+            int to = Math.min(from + size, total);
+            
+            if (from >= total) {
+                java.util.Map<String, Object> result = new java.util.HashMap<>();
+                result.put("total", total);
+                result.put("totalPages", (total + size - 1) / size);
+                result.put("currentPage", page);
+                result.put("items", java.util.Collections.emptyList());
+                return ApiResult.success("查询管理员申请列表成功", result);
+            }
+            
+            List<ApplicationHistoryDetailResponse> items = new java.util.ArrayList<>();
+            for (java.util.Map<String, Object> row : all.subList(from, to)) {
+                ApplicationHistoryDetailResponse dto = new ApplicationHistoryDetailResponse();
+                dto.setAppId((Integer) row.get("app_id"));
+                dto.setAdminId((Integer) row.get("admin_id"));
+                dto.setSecId((Integer) row.get("sec_id"));
+                dto.setReason((String) row.get("reason"));
+                dto.setTeacherId((Integer) row.get("teacher_id"));
+                dto.setSuggestion((String) row.get("suggestion"));
+                dto.setFinalDecision(row.get("final") != null ? ((Boolean) row.get("final")) : null);
+                dto.setCourseTitle((String) row.get("courseTitle"));
+                dto.setSemester((String) row.get("semester"));
+                dto.setYear((Integer) row.get("year"));
+                dto.setTeacherName((String) row.get("teacherName"));
+                dto.setClassroomLocation((String) row.get("classroomLocation"));
+                items.add(dto);
+            }
             
             java.util.Map<String, Object> result = new java.util.HashMap<>();
-            result.put("total", applicationPage.getTotalElements());
-            result.put("totalPages", applicationPage.getTotalPages());
+            result.put("total", total);
+            result.put("totalPages", (total + size - 1) / size);
             result.put("currentPage", page);
-            result.put("items", applicationPage.getContent());
+            result.put("items", items);
             
             return ApiResult.success("查询管理员申请列表成功", result);
         } catch (Exception e) {
