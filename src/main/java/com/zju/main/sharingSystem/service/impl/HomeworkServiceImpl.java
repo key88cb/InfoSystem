@@ -84,7 +84,7 @@ public class HomeworkServiceImpl implements HomeworkService {
                 }
                 homeworkFinalGrade.setProportion(homework.getProportion());
             }
-            finalCommitMapper.insertHomeworkGrade(list);
+            finalCommitMapper.insertHomeworkGrade(list, homework.getTitle());
             homeworkInfoMapper.updateHomework(homeworkId);
             return 1;
         }

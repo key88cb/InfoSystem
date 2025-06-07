@@ -4,16 +4,16 @@
 <mapper namespace="com.zju.main.sharingSystem.mapper.FinalCommitMapper">
 
     <insert id="insertHomeworkGrade">
-        INSERT INTO grade (takes_id, grade, proportion, type) VALUES
+        INSERT INTO grade (takes_id, grade, proportion, type, id, name) VALUES
         <foreach collection="grades" separator="," item="grade">
-            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'homework')
+            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'homework', 0, #{param2})
         </foreach>
     </insert>
 
     <insert id="insertAttendanceGrade">
-        INSERT INTO grade (takes_id, grade, proportion, type) VALUES
+        INSERT INTO grade (takes_id, grade, proportion, type, id, name) VALUES
         <foreach collection="grades" separator="," item="grade">
-            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'attending')
+            (#{grade.takesId}, #{grade.score}, #{grade.proportion}, 'attending', 0, "考勤成绩")
         </foreach>
     </insert>
 
